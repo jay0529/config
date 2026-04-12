@@ -24,15 +24,15 @@ function shouldExclude(name) {
 // ==================== 地区正则配置 ====================
 const REGEX_CONFIGS = {
     // 使用更精确的匹配模式
-    hk: /(?:^|\s|\(|（)(?:港|香港|HK|Hong\s*Kong)(?:$|\s|\)|）|\d)/i,
+    hk: /(?:^|\s|\(|（)(?:港|香港|HK|Hong\s*Kong|HongKong|hongkong)(?:$|\s|\)|）|\d)/i,
     tw: /(?:^|\s|\(|（)(?:台|台湾|新北|彰化|TW|Taiwan)(?:$|\s|\)|）|\d)/i,
-    jp: /(?:^|\s|\(|（)(?:日本|东京|大阪|埼玉|JP|Japan)(?:$|\s|\)|）|\d)/i,
+    jp: /(?:^|\s|\(|（)(?:日本|川日|东京|大阪|泉日|埼玉|沪日|深日|JP|Japan)(?:$|\s|\)|）|\d)/i,
     us: /(?:^|\s|\(|（)(?:美|美国|波特兰|达拉斯|俄勒冈|凤凰城|费利蒙|硅谷|拉斯维加斯|洛杉矶|圣何塞|圣克拉拉|西雅图|芝加哥|US|United\s*States)(?:$|\s|\)|）|\d)/i,
-    sg: /(?:^|\s|\(|（)(?:新加坡|狮城|SG|Singapore)(?:$|\s|\)|）|\d)/i,
-    kr: /(?:^|\s|\(|（)(?:韩|韩国|首尔|KR|Korea|KOR)(?:$|\s|\)|）|\d)/i,
+    sg: /(?:^|\s|\(|（)(?:新加坡|坡|狮城|SG|Singapore)(?:$|\s|\)|）|\d)/i,
+    kr: /(?:^|\s|\(|（)(?:韩|韩国|首尔|韓|KR|Korea|KOR)(?:$|\s|\)|）|\d)/i,
     uk: /(?:^|\s|\(|（)(?:英|英国|伦敦|英格兰|UK|United\s*Kingdom)(?:$|\s|\)|）|\d)/i,
-    nf: /(?:^|\s|\(|（)(?:奈飞|NF|Netflix|解锁|Media)(?:$|\s|\)|）|\d)/i,
-    netease: /(?:^|\s|\(|（)(?:网易|音乐|Music|NetEase)(?:$|\s|\)|）|\d)/i
+    nf: /(?:^|\s|\(|（)(?:奈飞|NF|解锁|Netflix|NETFLIX|Media)(?:$|\s|\)|）|\d)/i,
+    netease: /(?:^|\s|\(|（)(?:网易|音乐|解锁|Music|NetEase)(?:$|\s|\)|）|\d)/i
 };
 
 // ==================== 地区组配置 ====================
@@ -72,6 +72,7 @@ const PROXY_OPTION_TEMPLATES = {
     nodeAuto: ["🚀 节点选择", "♻️ 自动选择"],
     nodeAutoManual: ["🚀 节点选择", "♻️ 自动选择", "🚀 手动切换"],
     nodeAutoManualDirect: ["🚀 节点选择", "♻️ 自动选择", "🚀 手动切换", "DIRECT"],
+    nodeAutoFailoverLoadBalance: ["🚀 节点选择", "♻️ 自动选择", "🔯 故障转移", "🔮 负载均衡"],
     directNodeAutoManual: ["DIRECT", "🚀 节点选择", "♻️ 自动选择", "🚀 手动切换"],
     directNodeAuto: ["DIRECT", "🚀 节点选择", "♻️ 自动选择"],
     autoNodeManualDirect: ["♻️ 自动选择", "🚀 节点选择", "🚀 手动切换", "DIRECT"],
@@ -120,6 +121,22 @@ function createFallbackGroup(name, proxies, options = {}) {
     return group;
 }
 
+function createLoadBalanceGroup(name, proxies, options = {}) {
+    const group = {
+        name,
+        type: "load-balance",
+        proxies,
+        url: options.url || CONFIG.TEST_URL,
+        interval: options.interval || CONFIG.DEFAULT_INTERVAL
+    };
+
+    if (options.healthCheck !== undefined) {
+        group.healthCheck = options.healthCheck;
+    }
+
+    return group;
+}
+
 function ruleSetRules(ruleSetNames, targetGroup) {
     return ruleSetNames.map(ruleSetName => `RULE-SET,${ruleSetName},${targetGroup}`);
 }
@@ -141,6 +158,9 @@ const RULE_PROVIDER_DEFINITIONS = [
     ["UnBan", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/UnBan.list", "./ruleset/UnBan.yaml"],
     ["BanAD", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/BanAD.list", "./ruleset/BanAD.yaml"],
     ["BanProgramAD", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/BanProgramAD.list", "./ruleset/BanProgramAD.yaml"],
+    ["BanEasyList", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/BanEasyList.list", "./ruleset/BanEasyList.yaml"],
+    ["BanEasyListChina", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/BanEasyListChina.list", "./ruleset/BanEasyListChina.yaml"],
+    ["BanEasyPrivacy", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/BanEasyPrivacy.list", "./ruleset/BanEasyPrivacy.yaml"],
     ["GoogleFCM", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/GoogleFCM.list", "./ruleset/GoogleFCM.yaml"],
     ["GoogleCN", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/GoogleCN.list", "./ruleset/GoogleCN.yaml"],
     ["SteamCN", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/SteamCN.list", "./ruleset/SteamCN.yaml"],
@@ -150,6 +170,7 @@ const RULE_PROVIDER_DEFINITIONS = [
     ["Apple", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Apple.list", "./ruleset/Apple.yaml"],
     ["Telegram", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Telegram.list", "./ruleset/Telegram.yaml"],
     ["AI", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/AI.list", "./ruleset/AI.yaml"],
+    ["OpenAi", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/OpenAi.list", "./ruleset/OpenAi.yaml"],
     ["NetEaseMusic", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/NetEaseMusic.list", "./ruleset/NetEaseMusic.yaml"],
     ["Epic", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Epic.list", "./ruleset/Epic.yaml"],
     ["Origin", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Origin.list", "./ruleset/Origin.yaml"],
@@ -225,18 +246,18 @@ function main(config) {
         });
 
         const regionGroupNames = regionGroups.map(group => group.name);
+        const allProxyNames = allProxies.filter(name => !shouldExclude(name));
 
         // ==================== 辅助函数 ====================
         function getAvailableProxies(baseProxies, includeRegions = true) {
             const result = [...baseProxies];
             
             if (includeRegions) {
-                if (sgProxies.length > 0) result.push("🇸🇬 狮城节点");
                 if (hkProxies.length > 0) result.push("🇭🇰 香港节点");
                 if (twProxies.length > 0) result.push("🇨🇳 台湾节点");
                 if (jpProxies.length > 0) result.push("🇯🇵 日本节点");
                 if (usProxies.length > 0) result.push("🇺🇲 美国节点");
-                if (ukProxies.length > 0) result.push("🇬🇧 英国节点");
+                if (sgProxies.length > 0) result.push("🇸🇬 狮城节点");
                 if (krProxies.length > 0) result.push("🇰🇷 韩国节点");
             }
             
@@ -255,8 +276,11 @@ function main(config) {
 
         // ==================== 代理组配置 ====================
         config["proxy-groups"] = [
+            // 主节点选择
             createSelectGroup("🚀 节点选择", [
                 "♻️ 自动选择",
+                "🔯 故障转移",
+                "🔮 负载均衡",
                 ...regionGroupNames,
                 "🚀 手动切换",
                 "DIRECT"
@@ -264,53 +288,134 @@ function main(config) {
             createSelectGroup("🚀 手动切换", allProxies, {
                 healthCheck: createHealthCheck()
             }),
-            createUrlTestGroup("♻️ 自动选择", allProxies.filter(name => !shouldExclude(name)), {
+            createUrlTestGroup("♻️ 自动选择", allProxyNames, {
                 tolerance: 50,
                 healthCheck: createHealthCheck()
             }),
-            createFallbackGroup("📲 电报消息", fromTemplate("nodeAuto"), {
+            createFallbackGroup("🔯 故障转移", allProxyNames, {
                 healthCheck: createHealthCheck()
             }),
-            createSelectGroup("💬 AI", fromTemplate("nodeAutoManualDirect")),
-            createSelectGroup("📹 油管视频", fromTemplate("nodeAutoManualDirect")),
-            createSelectGroup("🎥 奈飞视频", fromTemplate("nodeAutoManual", {
-                prepend: ["🎥 奈飞节点"],
-                append: ["DIRECT"]
+            createLoadBalanceGroup("🔮 负载均衡", allProxyNames, {
+                healthCheck: createHealthCheck()
+            }),
+
+            // 应用分组
+            createSelectGroup("📲 电报消息", fromTemplate("nodeAuto", {
+                prepend: ["🚀 节点选择"],
+                append: ["🚀 手动切换", "DIRECT"]
             })),
+            createSelectGroup("💬 Ai平台", fromTemplate("nodeAuto", {
+                prepend: ["🚀 节点选择"],
+                append: ["🚀 手动切换", "DIRECT"]
+            })),
+            createSelectGroup("📹 油管视频", fromTemplate("nodeAuto", {
+                prepend: ["🚀 节点选择"],
+                append: ["🚀 手动切换", "DIRECT"]
+            })),
+            createSelectGroup("🎥 奈飞视频", [
+                "🎥 奈飞节点",
+                "🚀 节点选择",
+                "♻️ 自动选择",
+                "🔯 故障转移",
+                "🔮 负载均衡",
+                ...(hkProxies.length > 0 ? ["🇭🇰 香港节点"] : []),
+                ...(twProxies.length > 0 ? ["🇨🇳 台湾节点"] : []),
+                ...(sgProxies.length > 0 ? ["🇸🇬 狮城节点"] : []),
+                ...(jpProxies.length > 0 ? ["🇯🇵 日本节点"] : []),
+                ...(usProxies.length > 0 ? ["🇺🇲 美国节点"] : []),
+                ...(krProxies.length > 0 ? ["🇰🇷 韩国节点"] : []),
+                "🚀 手动切换",
+                "DIRECT"
+            ]),
             createSelectGroup("📺 巴哈姆特", [
                 ...(twProxies.length > 0 ? ["🇨🇳 台湾节点"] : []),
-                ...(hkProxies.length > 0 ? ["🇭🇰 香港节点"] : []),
                 "🚀 节点选择",
                 "🚀 手动切换",
                 "DIRECT"
             ]),
             createSelectGroup("📺 哔哩哔哩", [
                 "🎯 全球直连",
-                ...(hkProxies.length > 0 ? ["🇭🇰 香港节点"] : []),
-                ...(twProxies.length > 0 ? ["🇨🇳 台湾节点"] : [])
+                ...(twProxies.length > 0 ? ["🇨🇳 台湾节点"] : []),
+                ...(hkProxies.length > 0 ? ["🇭🇰 香港节点"] : [])
             ]),
-            createSelectGroup("🌍 国外媒体", fromTemplate("nodeAutoManualDirect")),
+            createSelectGroup("🌍 国外媒体", fromTemplate("nodeAuto", {
+                prepend: ["🚀 节点选择"],
+                append: ["🚀 手动切换", "DIRECT"]
+            })),
             createSelectGroup("🌏 国内媒体", [
                 "DIRECT",
-                "🚀 手动切换",
-                ...(sgProxies.length > 0 ? ["🇸🇬 狮城节点"] : []),
                 ...(hkProxies.length > 0 ? ["🇭🇰 香港节点"] : []),
                 ...(twProxies.length > 0 ? ["🇨🇳 台湾节点"] : []),
-                ...(jpProxies.length > 0 ? ["🇯🇵 日本节点"] : [])
-            ]),
-            createSelectGroup("📢 谷歌FCM", fromTemplate("directNodeAutoManual")),
-            createSelectGroup("Ⓜ️ 微软Bing", fromTemplate("directNodeAutoManual", { includeRegions: false })),
-            createSelectGroup("Ⓜ️ 微软云盘", fromTemplate("directNodeAutoManual", { includeRegions: false })),
-            createSelectGroup("Ⓜ️ 微软服务", fromTemplate("directNodeAutoManual", { includeRegions: false })),
-            createSelectGroup("🍎 苹果服务", fromTemplate("directNodeAutoManual", { includeRegions: false })),
-            createSelectGroup("🎮 游戏平台", getAvailableProxies([
-                "🚀 节点选择",
-                "♻️ 自动选择",
-                ...(hkProxies.length > 0 ? ["🇭🇰 香港节点"] : []),
+                ...(sgProxies.length > 0 ? ["🇸🇬 狮城节点"] : []),
                 ...(jpProxies.length > 0 ? ["🇯🇵 日本节点"] : []),
-                "🚀 手动切换",
-                "DIRECT"
-            ])),
+                "🚀 手动切换"
+            ]),
+            createSelectGroup("📢 谷歌FCM", [
+                "DIRECT",
+                "🚀 节点选择",
+                ...(usProxies.length > 0 ? ["🇺🇲 美国节点"] : []),
+                ...(hkProxies.length > 0 ? ["🇭🇰 香港节点"] : []),
+                ...(twProxies.length > 0 ? ["🇨🇳 台湾节点"] : []),
+                ...(sgProxies.length > 0 ? ["🇸🇬 狮城节点"] : []),
+                ...(jpProxies.length > 0 ? ["🇯🇵 日本节点"] : []),
+                ...(krProxies.length > 0 ? ["🇰🇷 韩国节点"] : []),
+                "🚀 手动切换"
+            ]),
+            createSelectGroup("Ⓜ️ 微软Bing", [
+                "DIRECT",
+                "🚀 节点选择",
+                ...(usProxies.length > 0 ? ["🇺🇲 美国节点"] : []),
+                ...(hkProxies.length > 0 ? ["🇭🇰 香港节点"] : []),
+                ...(twProxies.length > 0 ? ["🇨🇳 台湾节点"] : []),
+                ...(sgProxies.length > 0 ? ["🇸🇬 狮城节点"] : []),
+                ...(jpProxies.length > 0 ? ["🇯🇵 日本节点"] : []),
+                ...(krProxies.length > 0 ? ["🇰🇷 韩国节点"] : []),
+                "🚀 手动切换"
+            ]),
+            createSelectGroup("Ⓜ️ 微软云盘", [
+                "DIRECT",
+                "🚀 节点选择",
+                ...(usProxies.length > 0 ? ["🇺🇲 美国节点"] : []),
+                ...(hkProxies.length > 0 ? ["🇭🇰 香港节点"] : []),
+                ...(twProxies.length > 0 ? ["🇨🇳 台湾节点"] : []),
+                ...(sgProxies.length > 0 ? ["🇸🇬 狮城节点"] : []),
+                ...(jpProxies.length > 0 ? ["🇯🇵 日本节点"] : []),
+                ...(krProxies.length > 0 ? ["🇰🇷 韩国节点"] : []),
+                "🚀 手动切换"
+            ]),
+            createSelectGroup("Ⓜ️ 微软服务", [
+                "DIRECT",
+                "🚀 节点选择",
+                ...(usProxies.length > 0 ? ["🇺🇲 美国节点"] : []),
+                ...(hkProxies.length > 0 ? ["🇭🇰 香港节点"] : []),
+                ...(twProxies.length > 0 ? ["🇨🇳 台湾节点"] : []),
+                ...(sgProxies.length > 0 ? ["🇸🇬 狮城节点"] : []),
+                ...(jpProxies.length > 0 ? ["🇯🇵 日本节点"] : []),
+                ...(krProxies.length > 0 ? ["🇰🇷 韩国节点"] : []),
+                "🚀 手动切换"
+            ]),
+            createSelectGroup("🍎 苹果服务", [
+                "DIRECT",
+                "🚀 节点选择",
+                ...(usProxies.length > 0 ? ["🇺🇲 美国节点"] : []),
+                ...(hkProxies.length > 0 ? ["🇭🇰 香港节点"] : []),
+                ...(twProxies.length > 0 ? ["🇨🇳 台湾节点"] : []),
+                ...(sgProxies.length > 0 ? ["🇸🇬 狮城节点"] : []),
+                ...(jpProxies.length > 0 ? ["🇯🇵 日本节点"] : []),
+                ...(krProxies.length > 0 ? ["🇰🇷 韩国节点"] : []),
+                "🚀 手动切换"
+            ]),
+            createSelectGroup("🎮 游戏平台", [
+                "DIRECT",
+                "🚀 节点选择",
+                ...(usProxies.length > 0 ? ["🇺🇲 美国节点"] : []),
+                ...(hkProxies.length > 0 ? ["🇭🇰 香港节点"] : []),
+                ...(twProxies.length > 0 ? ["🇨🇳 台湾节点"] : []),
+                ...(sgProxies.length > 0 ? ["🇸🇬 狮城节点"] : []),
+                ...(jpProxies.length > 0 ? ["🇯🇵 日本节点"] : []),
+                ...(krProxies.length > 0 ? ["🇰🇷 韩国节点"] : []),
+                "🚀 手动切换"
+            ]),
             createSelectGroup("🎶 网易音乐", [
                 "DIRECT",
                 "🚀 节点选择",
@@ -321,11 +426,26 @@ function main(config) {
             createSelectGroup("🎯 自定义直连", ["DIRECT"]),
             createSelectGroup("🛑 广告拦截", fromTemplate("rejectDirect", { includeRegions: false })),
             createSelectGroup("🍃 应用净化", fromTemplate("rejectDirect", { includeRegions: false })),
-            createSelectGroup("🐟 漏网之鱼", fromTemplate("autoNodeManualDirect")),
-            createUrlTestGroup("🎥 奈飞节点", nfProxies.length > 0 ? nfProxies : ["DIRECT"], {
-                tolerance: 50,
-                healthCheck: nfProxies.length > 0 ? createHealthCheck() : undefined
-            }),
+            createSelectGroup("🆎 AdBlock", fromTemplate("rejectDirect", { includeRegions: false })),
+            createSelectGroup("🛡️ 隐私防护", fromTemplate("rejectDirect", { includeRegions: false })),
+            createSelectGroup("🐟 漏网之鱼", [
+                "🚀 节点选择",
+                "♻️ 自动选择",
+                "DIRECT",
+                ...(hkProxies.length > 0 ? ["🇭🇰 香港节点"] : []),
+                ...(twProxies.length > 0 ? ["🇨🇳 台湾节点"] : []),
+                ...(sgProxies.length > 0 ? ["🇸🇬 狮城节点"] : []),
+                ...(jpProxies.length > 0 ? ["🇯🇵 日本节点"] : []),
+                ...(usProxies.length > 0 ? ["🇺🇲 美国节点"] : []),
+                ...(krProxies.length > 0 ? ["🇰🇷 韩国节点"] : []),
+                "🚀 手动切换"
+            ]),
+
+            // 奈飞节点选择分组
+            createSelectGroup("🎥 奈飞节点", [
+                ...(nfProxies.length > 0 ? nfProxies : []),
+                "DIRECT"
+            ]),
 
             // 添加地区分组
             ...regionGroups
@@ -337,19 +457,19 @@ function main(config) {
         // 自定义直连规则
         const customDirectRules = [
             // Gemini AI 规则
-            "DOMAIN,ai.google.dev,💬 AI",
-            "DOMAIN,alkalimakersuite-pa.clients6.google.com,💬 AI",
-            "DOMAIN,makersuite.google.com,💬 AI",
-            "DOMAIN-SUFFIX,bard.google.com,💬 AI",
-            "DOMAIN-SUFFIX,deepmind.com,💬 AI",
-            "DOMAIN-SUFFIX,deepmind.google,💬 AI",
-            "DOMAIN-SUFFIX,gemini.google.com,💬 AI",
-            "DOMAIN-SUFFIX,generativeai.google,💬 AI",
-            "DOMAIN-SUFFIX,proactivebackend-pa.googleapis.com,💬 AI",
-            "DOMAIN-SUFFIX,apis.google.com,💬 AI",
-            "DOMAIN-KEYWORD,colab,💬 AI",
-            "DOMAIN-KEYWORD,developerprofiles,💬 AI",
-            "DOMAIN-KEYWORD,generativelanguage,💬 AI",
+            "DOMAIN,ai.google.dev,💬 Ai平台",
+            "DOMAIN,alkalimakersuite-pa.clients6.google.com,💬 Ai平台",
+            "DOMAIN,makersuite.google.com,💬 Ai平台",
+            "DOMAIN-SUFFIX,bard.google.com,💬 Ai平台",
+            "DOMAIN-SUFFIX,deepmind.com,💬 Ai平台",
+            "DOMAIN-SUFFIX,deepmind.google,💬 Ai平台",
+            "DOMAIN-SUFFIX,gemini.google.com,💬 Ai平台",
+            "DOMAIN-SUFFIX,generativeai.google,💬 Ai平台",
+            "DOMAIN-SUFFIX,proactivebackend-pa.googleapis.com,💬 Ai平台",
+            "DOMAIN-SUFFIX,apis.google.com,💬 Ai平台",
+            "DOMAIN-KEYWORD,colab,💬 Ai平台",
+            "DOMAIN-KEYWORD,developerprofiles,💬 Ai平台",
+            "DOMAIN-KEYWORD,generativelanguage,💬 Ai平台",
             
             // GitHub 相关
             "DOMAIN-KEYWORD,github,♻️ 自动选择",
@@ -358,8 +478,8 @@ function main(config) {
             // 特定域名
             "DOMAIN,zhuce.mri.edu.kg,♻️ 自动选择",
             "DOMAIN-KEYWORD,imgur,🇺🇲 美国节点",
-            "DOMAIN-KEYWORD,anthropic,💬 AI",
-            "DOMAIN-KEYWORD,claude,💬 AI",
+            "DOMAIN-KEYWORD,anthropic,💬 Ai平台",
+            "DOMAIN-KEYWORD,claude,💬 Ai平台",
             
             // 自定义直连
             "DOMAIN-KEYWORD,infini,🎯 自定义直连",
@@ -383,7 +503,7 @@ function main(config) {
             "DOMAIN-SUFFIX,freefiremobile.com,DIRECT"
         ];
 
-        // ==================== 优化后的规则顺序 ====================
+        // ==================== 规则顺序（与ACL4SSR配置保持一致）====================
         config["rules"] = [
             // 1. Garena 直连规则（最高优先级）
             ...garenaRules,
@@ -395,49 +515,73 @@ function main(config) {
             ...customDirectRules,
             ...ruleSetRules(["CustomDirect"], "🎯 自定义直连"),
             
-            // 4. 广告拦截（尽早拦截）
+            // 4. 局域网直连
+            ...ruleSetRules(["LocalAreaNetwork"], "🎯 全球直连"),
+            ...ruleSetRules(["UnBan"], "🎯 全球直连"),
+            
+            // 5. 广告拦截（尽早拦截）
             ...ruleSetRules(["BanAD"], "🛑 广告拦截"),
             ...ruleSetRules(["BanProgramAD"], "🍃 应用净化"),
+            ...ruleSetRules(["BanEasyList"], "🆎 AdBlock"),
+            ...ruleSetRules(["BanEasyListChina"], "🆎 AdBlock"),
+            ...ruleSetRules(["BanEasyPrivacy"], "🛡️ 隐私防护"),
             
-            // 5. 即时通讯和AI服务
-            ...ruleSetRules(["Telegram"], "📲 电报消息"),
-            ...ruleSetRules(["AI"], "💬 AI"),
-            
-            // 6. 流媒体服务（特定区域）
-            ...ruleSetRules(["YouTube"], "📹 油管视频"),
-            ...ruleSetRules(["Netflix"], "🎥 奈飞视频"),
-            ...ruleSetRules(["Bahamut"], "📺 巴哈姆特"),
-            ...ruleSetRules(["BilibiliHMT", "Bilibili"], "📺 哔哩哔哩"),
-            
-            // 7. 游戏平台
-            ...ruleSetRules(["Epic", "Origin", "Sony", "Steam", "Nintendo"], "🎮 游戏平台"),
-            
-            // 8. 国际服务
+            // 6. 谷歌FCM
             ...ruleSetRules(["GoogleFCM"], "📢 谷歌FCM"),
+            
+            // 7. 国内服务直连
+            ...ruleSetRules(["GoogleCN"], "🎯 全球直连"),
+            ...ruleSetRules(["SteamCN"], "🎯 全球直连"),
+            
+            // 8. 微软服务
             ...ruleSetRules(["Bing"], "Ⓜ️ 微软Bing"),
             ...ruleSetRules(["OneDrive"], "Ⓜ️ 微软云盘"),
             ...ruleSetRules(["Microsoft"], "Ⓜ️ 微软服务"),
+            
+            // 9. 苹果服务
             ...ruleSetRules(["Apple"], "🍎 苹果服务"),
             
-            // 9. 媒体服务
-            ...ruleSetRules(["ChinaMedia"], "🌏 国内媒体"),
-            ...ruleSetRules(["ProxyMedia"], "🌍 国外媒体"),
+            // 10. 即时通讯
+            ...ruleSetRules(["Telegram"], "📲 电报消息"),
+            
+            // 11. AI平台
+            ...ruleSetRules(["AI"], "💬 Ai平台"),
+            ...ruleSetRules(["OpenAi"], "💬 Ai平台"),
+            
+            // 12. 网易音乐
             ...ruleSetRules(["NetEaseMusic"], "🎶 网易音乐"),
             
-            // 10. 代理列表
+            // 13. 游戏平台
+            ...ruleSetRules(["Epic"], "🎮 游戏平台"),
+            ...ruleSetRules(["Origin"], "🎮 游戏平台"),
+            ...ruleSetRules(["Sony"], "🎮 游戏平台"),
+            ...ruleSetRules(["Steam"], "🎮 游戏平台"),
+            ...ruleSetRules(["Nintendo"], "🎮 游戏平台"),
+            
+            // 14. 流媒体服务
+            ...ruleSetRules(["YouTube"], "📹 油管视频"),
+            ...ruleSetRules(["Netflix"], "🎥 奈飞视频"),
+            ...ruleSetRules(["Bahamut"], "📺 巴哈姆特"),
+            ...ruleSetRules(["BilibiliHMT"], "📺 哔哩哔哩"),
+            ...ruleSetRules(["Bilibili"], "📺 哔哩哔哩"),
+            
+            // 15. 媒体服务
+            ...ruleSetRules(["ChinaMedia"], "🌏 国内媒体"),
+            ...ruleSetRules(["ProxyMedia"], "🌍 国外媒体"),
+            
+            // 16. 代理列表
             ...ruleSetRules(["ProxyGFWlist"], "🚀 节点选择"),
             
-            // 11. 国内域名（直连）
-            ...ruleSetRules(
-                ["GuoNeiWangZhan", "ChinaDomain", "GoogleCN", "SteamCN", "ChinaCompanyIp", "LocalAreaNetwork", "UnBan", "Download"],
-                "🎯 全球直连"
-            ),
+            // 17. 国内域名（直连）
+            ...ruleSetRules(["ChinaDomain"], "🎯 全球直连"),
+            ...ruleSetRules(["ChinaCompanyIp"], "🎯 全球直连"),
+            ...ruleSetRules(["Download"], "🎯 全球直连"),
             
-            // 12. IP规则
+            // 18. IP规则
             "GEOIP,CN,🎯 全球直连",
             ...ruleSetRules(["ChinaIPs"], "🎯 全球直连"),
             
-            // 13. 兜底规则
+            // 19. 兜底规则
             "MATCH,🐟 漏网之鱼"
         ];
 
