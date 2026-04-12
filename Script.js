@@ -1,6 +1,6 @@
 // ==================== 常量配置 ====================
 const CONFIG = {
-    TEST_URL: "http://www.gstatic.com/generate_204",
+    TEST_URL: "https://cp.cloudflare.com/generate_204", // "http://www.gstatic.com/generate_204",
     DEFAULT_INTERVAL: 300,
     HEALTH_CHECK_INTERVAL: 600,
     RULE_UPDATE_INTERVAL: 86400,
@@ -190,7 +190,7 @@ const RULE_PROVIDER_DEFINITIONS = [
     ["Download", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Download.list", "./ruleset/Download.yaml"],
     ["CustomDirect", "https://raw.githubusercontent.com/Lbiebest/clash-config/refs/heads/master/rules/CustomDirect.list", "./ruleset/CustomDirect.yaml"],
     ["GuoNeiWangZhan", "https://raw.githubusercontent.com/Meilieage/webcdn/main/rule/list/GuoNeiWangZhan.list", "./ruleset/GuoNeiWangZhan.yaml"],
-    ["ChinaIPs", "https://raw.githubusercontent.com/DivineEngine/Profiles/master/Clash/RuleSet/Extra/ChinaIP.yaml", "./ruleset/ChinaIPs.yaml", { behavior: "ipcidr" }],
+    ["ChinaIPs", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/ChinaIp.list", "./ruleset/ChinaIPs.yaml", { behavior: "ipcidr" }],
     ["ProcessRules", "https://raw.githubusercontent.com/Lbiebest/clash-config/refs/heads/master/rules/ProcessRules.list", "./ruleset/ProcessRules.yaml", { format: "text" }]
 ];
 
@@ -488,11 +488,11 @@ function main(config) {
         // ==================== 规则顺序（与ACL4SSR配置保持一致）====================
         config["rules"] = [
             // 1. 进程规则
-            ...ruleSetRules(["ProcessRules"], "DIRECT"),
+            // ...ruleSetRules(["ProcessRules"], "DIRECT"),
             
             // 2. 自定义规则
             ...customDirectRules,
-            ...ruleSetRules(["CustomDirect"], "🎯 自定义直连"),
+            // ...ruleSetRules(["CustomDirect"], "🎯 自定义直连"),
             
             // 3. 局域网直连
             ...ruleSetRules(["LocalAreaNetwork"], "🎯 全球直连"),
