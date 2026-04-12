@@ -184,15 +184,7 @@ function main(config) {
         REGION_GROUP_CONFIGS.forEach(cfg => {
             regionProxies[cfg.name] = getProxiesByRegex(config.proxies, cfg.regex);
         });
-        
-        const hkProxies = regionProxies["🇭🇰 香港节点"] || [];
-        const twProxies = regionProxies["🇨🇳 台湾节点"] || [];
-        const jpProxies = regionProxies["🇯🇵 日本节点"] || [];
-        const usProxies = regionProxies["🇺🇲 美国节点"] || [];
-        const sgProxies = regionProxies["🇸🇬 狮城节点"] || [];
-        const krProxies = regionProxies["🇰🇷 韩国节点"] || [];
-        const ukProxies = regionProxies["🇬🇧 英国节点"] || [];
-        
+
         const nfProxies = getProxiesByRegex(config.proxies, REGEX_CONFIGS.nf);
         const neteaseMusicProxies = getProxiesByRegex(config.proxies, REGEX_CONFIGS.netease);
 
@@ -218,18 +210,18 @@ function main(config) {
         const allProxyNames = allProxies.filter(name => !shouldExclude(name));
 
         // ==================== 辅助函数 ====================
+        function hasRegionGroup(name) {
+            return (regionProxies[name] || []).length > 0;
+        }
+
+        function getRegionOptions(names) {
+            return names.filter(hasRegionGroup);
+        }
+
         function getAvailableRegionOptions() {
-            const result = [];
-
-            if (hkProxies.length > 0) result.push("🇭🇰 香港节点");
-            if (twProxies.length > 0) result.push("🇨🇳 台湾节点");
-            if (jpProxies.length > 0) result.push("🇯🇵 日本节点");
-            if (usProxies.length > 0) result.push("🇺🇲 美国节点");
-            if (sgProxies.length > 0) result.push("🇸🇬 狮城节点");
-            if (krProxies.length > 0) result.push("🇰🇷 韩国节点");
-            if (ukProxies.length > 0) result.push("🇬🇧 英国节点");
-
-            return result;
+            return REGION_GROUP_CONFIGS
+                .map(cfg => cfg.name)
+                .filter(hasRegionGroup);
         }
 
         function fromTemplate(templateKey, options = {}) {
@@ -272,23 +264,19 @@ function main(config) {
                 prepend: ["🎥 奈飞节点"]
             })),
             createSelectGroup("📺 巴哈姆特", [
-                ...(twProxies.length > 0 ? ["🇨🇳 台湾节点"] : []),
+                ...getRegionOptions(["🇨🇳 台湾节点"]),
                 "🚀 节点选择",
                 "🚀 手动切换",
                 "DIRECT"
             ]),
             createSelectGroup("📺 哔哩哔哩", [
                 "🎯 全球直连",
-                ...(twProxies.length > 0 ? ["🇨🇳 台湾节点"] : []),
-                ...(hkProxies.length > 0 ? ["🇭🇰 香港节点"] : [])
+                ...getRegionOptions(["🇨🇳 台湾节点", "🇭🇰 香港节点"])
             ]),
             createSelectGroup("🌍 国外媒体", fromTemplate("nodeAutoManualDirect")),
             createSelectGroup("🌏 国内媒体", [
                 "DIRECT",
-                ...(hkProxies.length > 0 ? ["🇭🇰 香港节点"] : []),
-                ...(twProxies.length > 0 ? ["🇨🇳 台湾节点"] : []),
-                ...(sgProxies.length > 0 ? ["🇸🇬 狮城节点"] : []),
-                ...(jpProxies.length > 0 ? ["🇯🇵 日本节点"] : []),
+                ...getRegionOptions(["🇭🇰 香港节点", "🇨🇳 台湾节点", "🇸🇬 狮城节点", "🇯🇵 日本节点"]),
                 "🚀 手动切换"
             ]),
             createSelectGroup("📢 谷歌FCM", fromTemplate("nodeAutoManualDirect")),
