@@ -13,7 +13,7 @@ const CONFIG = {
 
 // ==================== 排除关键词 ====================
 const excludeKeywords = [
-    "下载", "测试", "充值", "余额", "分割线",
+    "下载", "测试", "充值", "余额", "分割线", 
     "群", "官网", "失联", "邮件", "剩余", "到期"
 ];
 
@@ -23,6 +23,7 @@ function shouldExclude(name) {
 
 // ==================== 地区正则配置 ====================
 const REGEX_CONFIGS = {
+    // 使用更精确的匹配模式
     hk: /(?:^|\s|\(|（)(?:港|香港|HK|Hong\s*Kong|HongKong|hongkong)(?:$|\s|\)|）|\d)/i,
     tw: /(?:^|\s|\(|（)(?:台|台湾|新北|彰化|TW|Taiwan)(?:$|\s|\)|）|\d)/i,
     jp: /(?:^|\s|\(|（)(?:日本|川日|东京|大阪|泉日|埼玉|沪日|深日|JP|Japan)(?:$|\s|\)|）|\d)/i,
@@ -88,7 +89,7 @@ function createSelectGroup(name, proxies, extras = {}) {
 }
 
 function createUrlTestGroup(name, proxies, options = {}) {
-    return {
+    const group = {
         name,
         type: "url-test",
         proxies,
@@ -96,27 +97,44 @@ function createUrlTestGroup(name, proxies, options = {}) {
         interval: options.interval || CONFIG.DEFAULT_INTERVAL,
         tolerance: options.tolerance ?? 50
     };
+
+    if (options.healthCheck !== undefined) {
+        group.healthCheck = options.healthCheck;
+    }
+
+    return group;
 }
 
 function createFallbackGroup(name, proxies, options = {}) {
-    return {
+    const group = {
         name,
         type: "fallback",
         proxies,
         url: options.url || CONFIG.TEST_URL,
         interval: options.interval || CONFIG.DEFAULT_INTERVAL
     };
+
+    if (options.healthCheck !== undefined) {
+        group.healthCheck = options.healthCheck;
+    }
+
+    return group;
 }
 
 function createLoadBalanceGroup(name, proxies, options = {}) {
-    return {
+    const group = {
         name,
         type: "load-balance",
-        strategy: options.strategy || "consistent-hashing",
         proxies,
         url: options.url || CONFIG.TEST_URL,
         interval: options.interval || CONFIG.DEFAULT_INTERVAL
     };
+
+    if (options.healthCheck !== undefined) {
+        group.healthCheck = options.healthCheck;
+    }
+
+    return group;
 }
 
 function ruleSetRules(ruleSetNames, targetGroup) {
@@ -127,7 +145,7 @@ function ruleSetRules(ruleSetNames, targetGroup) {
 function createRuleProvider(url, path, options = {}) {
     return {
         type: "http",
-        format: options.format || "yaml",
+        format: options.format || "text",
         interval: CONFIG.RULE_UPDATE_INTERVAL,
         behavior: options.behavior || "classical",
         url,
@@ -136,44 +154,44 @@ function createRuleProvider(url, path, options = {}) {
 }
 
 const RULE_PROVIDER_DEFINITIONS = [
-    ["LocalAreaNetwork",  "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/LocalAreaNetwork.list",        "./ruleset/LocalAreaNetwork.yaml"],
-    ["UnBan",             "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/UnBan.list",                   "./ruleset/UnBan.yaml"],
-    ["BanAD",             "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/BanAD.list",                   "./ruleset/BanAD.yaml"],
-    ["BanProgramAD",      "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/BanProgramAD.list",            "./ruleset/BanProgramAD.yaml"],
-    ["BanEasyList",       "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/BanEasyList.list",             "./ruleset/BanEasyList.yaml"],
-    ["BanEasyListChina",  "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/BanEasyListChina.list",        "./ruleset/BanEasyListChina.yaml"],
-    ["BanEasyPrivacy",    "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/BanEasyPrivacy.list",          "./ruleset/BanEasyPrivacy.yaml"],
-    ["GoogleFCM",         "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/GoogleFCM.list",       "./ruleset/GoogleFCM.yaml"],
-    ["GoogleCN",          "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/GoogleCN.list",                "./ruleset/GoogleCN.yaml"],
-    ["SteamCN",           "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/SteamCN.list",         "./ruleset/SteamCN.yaml"],
-    ["Bing",              "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Bing.list",                    "./ruleset/Bing.yaml"],
-    ["OneDrive",          "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/OneDrive.list",                "./ruleset/OneDrive.yaml"],
-    ["Microsoft",         "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Microsoft.list",              "./ruleset/Microsoft.yaml"],
-    ["Apple",             "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Apple.list",                  "./ruleset/Apple.yaml"],
-    ["Telegram",          "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Telegram.list",               "./ruleset/Telegram.yaml"],
-    ["AI",                "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/AI.list",              "./ruleset/AI.yaml"],
-    ["OpenAi",            "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/OpenAi.list",          "./ruleset/OpenAi.yaml"],
-    ["NetEaseMusic",      "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/NetEaseMusic.list",    "./ruleset/NetEaseMusic.yaml"],
-    ["Epic",              "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Epic.list",            "./ruleset/Epic.yaml"],
-    ["Origin",            "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Origin.list",         "./ruleset/Origin.yaml"],
-    ["Sony",              "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Sony.list",            "./ruleset/Sony.yaml"],
-    ["Steam",             "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Steam.list",           "./ruleset/Steam.yaml"],
-    ["Nintendo",          "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Nintendo.list",        "./ruleset/Nintendo.yaml"],
-    ["YouTube",           "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/YouTube.list",         "./ruleset/YouTube.yaml"],
-    ["Netflix",           "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Netflix.list",         "./ruleset/Netflix.yaml"],
-    ["Bahamut",           "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Bahamut.list",         "./ruleset/Bahamut.yaml"],
-    ["BilibiliHMT",       "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/BilibiliHMT.list",     "./ruleset/BilibiliHMT.yaml"],
-    ["Bilibili",          "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Bilibili.list",        "./ruleset/Bilibili.yaml"],
-    ["ChinaMedia",        "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/ChinaMedia.list",              "./ruleset/ChinaMedia.yaml"],
-    ["ProxyMedia",        "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/ProxyMedia.list",              "./ruleset/ProxyMedia.yaml"],
-    ["ProxyGFWlist",      "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/ProxyGFWlist.list",            "./ruleset/ProxyGFWlist.yaml"],
-    ["ChinaDomain",       "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/ChinaDomain.list",             "./ruleset/ChinaDomain.yaml"],
-    ["ChinaCompanyIp",    "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/ChinaCompanyIp.list",          "./ruleset/ChinaCompanyIp.yaml"],
-    ["Download",          "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Download.list",                "./ruleset/Download.yaml"],
-    ["CustomDirect",      "https://raw.githubusercontent.com/Lbiebest/clash-config/refs/heads/master/rules/CustomDirect.list", "./ruleset/CustomDirect.yaml"],
-    ["ChinaExtra",        "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/China/China.list", "./ruleset/ChinaExtra.yaml"],
-    ["ChinaIPs",          "https://raw.githubusercontent.com/DivineEngine/Profiles/master/Clash/RuleSet/Extra/ChinaIP.yaml",   "./ruleset/ChinaIPs.yaml",   { behavior: "ipcidr" }],
-    ["ProcessRules",      "https://raw.githubusercontent.com/Lbiebest/clash-config/refs/heads/master/rules/ProcessRules.list", "./ruleset/ProcessRules.yaml", { format: "yaml", behavior: "classical" }]
+    ["LocalAreaNetwork", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/LocalAreaNetwork.list", "./ruleset/LocalAreaNetwork.yaml"],
+    ["UnBan", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/UnBan.list", "./ruleset/UnBan.yaml"],
+    ["BanAD", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/BanAD.list", "./ruleset/BanAD.yaml"],
+    ["BanProgramAD", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/BanProgramAD.list", "./ruleset/BanProgramAD.yaml"],
+    ["BanEasyList", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/BanEasyList.list", "./ruleset/BanEasyList.yaml"],
+    ["BanEasyListChina", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/BanEasyListChina.list", "./ruleset/BanEasyListChina.yaml"],
+    ["BanEasyPrivacy", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/BanEasyPrivacy.list", "./ruleset/BanEasyPrivacy.yaml"],
+    ["GoogleFCM", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/GoogleFCM.list", "./ruleset/GoogleFCM.yaml"],
+    ["GoogleCN", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/GoogleCN.list", "./ruleset/GoogleCN.yaml"],
+    ["SteamCN", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/SteamCN.list", "./ruleset/SteamCN.yaml"],
+    ["Bing", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Bing.list", "./ruleset/Bing.yaml"],
+    ["OneDrive", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/OneDrive.list", "./ruleset/OneDrive.yaml"],
+    ["Microsoft", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Microsoft.list", "./ruleset/Microsoft.yaml"],
+    ["Apple", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Apple.list", "./ruleset/Apple.yaml"],
+    ["Telegram", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Telegram.list", "./ruleset/Telegram.yaml"],
+    ["AI", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/AI.list", "./ruleset/AI.yaml"],
+    ["OpenAi", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/OpenAi.list", "./ruleset/OpenAi.yaml"],
+    ["NetEaseMusic", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/NetEaseMusic.list", "./ruleset/NetEaseMusic.yaml"],
+    ["Epic", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Epic.list", "./ruleset/Epic.yaml"],
+    ["Origin", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Origin.list", "./ruleset/Origin.yaml"],
+    ["Sony", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Sony.list", "./ruleset/Sony.yaml"],
+    ["Steam", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Steam.list", "./ruleset/Steam.yaml"],
+    ["Nintendo", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Nintendo.list", "./ruleset/Nintendo.yaml"],
+    ["YouTube", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/YouTube.list", "./ruleset/YouTube.yaml"],
+    ["Netflix", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Netflix.list", "./ruleset/Netflix.yaml"],
+    ["Bahamut", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Bahamut.list", "./ruleset/Bahamut.yaml"],
+    ["BilibiliHMT", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/BilibiliHMT.list", "./ruleset/BilibiliHMT.yaml"],
+    ["Bilibili", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Bilibili.list", "./ruleset/Bilibili.yaml"],
+    ["ChinaMedia", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/ChinaMedia.list", "./ruleset/ChinaMedia.yaml"],
+    ["ProxyMedia", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/ProxyMedia.list", "./ruleset/ProxyMedia.yaml"],
+    ["ProxyGFWlist", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/ProxyGFWlist.list", "./ruleset/ProxyGFWlist.yaml"],
+    ["ChinaDomain", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/ChinaDomain.list", "./ruleset/ChinaDomain.yaml"],
+    ["ChinaCompanyIp", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/ChinaCompanyIp.list", "./ruleset/ChinaCompanyIp.yaml"],
+    ["Download", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Download.list", "./ruleset/Download.yaml"],
+    ["CustomDirect", "https://raw.githubusercontent.com/Lbiebest/clash-config/refs/heads/master/rules/CustomDirect.list", "./ruleset/CustomDirect.yaml"],
+    ["GuoNeiWangZhan", "https://raw.githubusercontent.com/Meilieage/webcdn/main/rule/list/GuoNeiWangZhan.list", "./ruleset/GuoNeiWangZhan.yaml"],
+    ["ChinaIPs", "https://raw.githubusercontent.com/DivineEngine/Profiles/master/Clash/RuleSet/Extra/ChinaIP.yaml", "./ruleset/ChinaIPs.yaml", { behavior: "ipcidr" }],
+    ["ProcessRules", "https://raw.githubusercontent.com/Lbiebest/clash-config/refs/heads/master/rules/ProcessRules.list", "./ruleset/ProcessRules.yaml", { format: "text" }]
 ];
 
 const ruleProviders = Object.fromEntries(
@@ -190,13 +208,13 @@ function main(config) {
         }
 
         const allProxies = config.proxies.map(e => e.name);
-
+        
         // 获取各地区的代理节点
         const regionProxies = {};
         REGION_GROUP_CONFIGS.forEach(cfg => {
             regionProxies[cfg.name] = getProxiesByRegex(config.proxies, cfg.regex);
         });
-
+        
         const hkProxies = regionProxies["🇭🇰 香港节点"] || [];
         const twProxies = regionProxies["🇨🇳 台湾节点"] || [];
         const jpProxies = regionProxies["🇯🇵 日本节点"] || [];
@@ -204,19 +222,25 @@ function main(config) {
         const sgProxies = regionProxies["🇸🇬 狮城节点"] || [];
         const krProxies = regionProxies["🇰🇷 韩国节点"] || [];
         const ukProxies = regionProxies["🇬🇧 英国节点"] || [];
-
+        
         const nfProxies = getProxiesByRegex(config.proxies, REGEX_CONFIGS.nf);
         const neteaseMusicProxies = getProxiesByRegex(config.proxies, REGEX_CONFIGS.netease);
 
         // ==================== 创建地区分组 ====================
         const regionGroups = [];
-
+        
         REGION_GROUP_CONFIGS.forEach(cfg => {
             const proxies = regionProxies[cfg.name] || [];
             if (proxies.length > 0) {
-                regionGroups.push(createUrlTestGroup(cfg.name, proxies, {
+                // URL测试组
+                regionGroups.push({
+                    name: cfg.name,
+                    type: "url-test",
+                    proxies: proxies,
+                    url: CONFIG.TEST_URL,
+                    interval: CONFIG.DEFAULT_INTERVAL,
                     tolerance: cfg.tolerance
-                }));
+                });
             }
         });
 
@@ -226,7 +250,7 @@ function main(config) {
         // ==================== 辅助函数 ====================
         function getAvailableProxies(baseProxies, includeRegions = true) {
             const result = [...baseProxies];
-
+            
             if (includeRegions) {
                 if (hkProxies.length > 0) result.push("🇭🇰 香港节点");
                 if (twProxies.length > 0) result.push("🇨🇳 台湾节点");
@@ -235,7 +259,7 @@ function main(config) {
                 if (sgProxies.length > 0) result.push("🇸🇬 狮城节点");
                 if (krProxies.length > 0) result.push("🇰🇷 韩国节点");
             }
-
+            
             return [...new Set(result)];
         }
 
@@ -261,7 +285,9 @@ function main(config) {
                 "DIRECT"
             ]),
             createSelectGroup("🚀 手动切换", allProxies),
-            createUrlTestGroup("♻️ 自动选择", allProxyNames, { tolerance: 50 }),
+            createUrlTestGroup("♻️ 自动选择", allProxyNames, {
+                tolerance: 50
+            }),
             createFallbackGroup("🔯 故障转移", allProxyNames),
             createLoadBalanceGroup("🔮 负载均衡", allProxyNames),
 
@@ -389,30 +415,32 @@ function main(config) {
                 ...neteaseMusicProxies
             ]),
             createSelectGroup("🎯 全球直连", fromTemplate("directNodeAuto")),
+            createSelectGroup("🎯 自定义直连", ["DIRECT"]),
             createSelectGroup("🛑 广告拦截", fromTemplate("rejectDirect", { includeRegions: false })),
             createSelectGroup("🍃 应用净化", fromTemplate("rejectDirect", { includeRegions: false })),
-            createSelectGroup("🆎 AdBlock",  fromTemplate("rejectDirect", { includeRegions: false })),
+            createSelectGroup("🆎 AdBlock", fromTemplate("rejectDirect", { includeRegions: false })),
             createSelectGroup("🛡️ 隐私防护", fromTemplate("rejectDirect", { includeRegions: false })),
+
             createSelectGroup("🐟 漏网之鱼", [
                 "🚀 节点选择",
                 "♻️ 自动选择",
-                "DIRECT",
                 ...(hkProxies.length > 0 ? ["🇭🇰 香港节点"] : []),
                 ...(twProxies.length > 0 ? ["🇨🇳 台湾节点"] : []),
                 ...(sgProxies.length > 0 ? ["🇸🇬 狮城节点"] : []),
                 ...(jpProxies.length > 0 ? ["🇯🇵 日本节点"] : []),
                 ...(usProxies.length > 0 ? ["🇺🇲 美国节点"] : []),
                 ...(krProxies.length > 0 ? ["🇰🇷 韩国节点"] : []),
-                "🚀 手动切换"
+                "🚀 手动切换",
+                "DIRECT",
             ]),
 
+            // 奈飞节点选择分组
             createSelectGroup("🎥 奈飞节点", [
-                ...(nfProxies.length > 0 ? nfProxies : ["🚀 节点选择"]),
-                "🚀 节点选择",
+                ...(nfProxies.length > 0 ? nfProxies : []),
                 "DIRECT"
             ]),
 
-            // 地区分组
+            // 添加地区分组
             ...regionGroups
         ];
 
@@ -435,128 +463,123 @@ function main(config) {
             "DOMAIN-KEYWORD,colab,💬 Ai平台",
             "DOMAIN-KEYWORD,developerprofiles,💬 Ai平台",
             "DOMAIN-KEYWORD,generativelanguage,💬 Ai平台",
-
-            "DOMAIN-SUFFIX,claude.ai,💬 Ai平台",
-            "DOMAIN-SUFFIX,anthropic.com,💬 Ai平台",
-
-            "DOMAIN-SUFFIX,github.com,♻️ 自动选择",
-            "DOMAIN-SUFFIX,github.io,♻️ 自动选择",
-            "DOMAIN-SUFFIX,githubusercontent.com,♻️ 自动选择",
-            "DOMAIN-SUFFIX,ghcr.io,♻️ 自动选择",
-
-            "DOMAIN-SUFFIX,googleapis.com,♻️ 自动选择",
-
+            
+            // GitHub 相关
+            "DOMAIN-KEYWORD,github,♻️ 自动选择",
+            "DOMAIN-KEYWORD,googleapis,♻️ 自动选择",
+            
             // 特定域名
             "DOMAIN,zhuce.mri.edu.kg,♻️ 自动选择",
             "DOMAIN-KEYWORD,imgur,🇺🇲 美国节点",
-
-            "DOMAIN-KEYWORD,infini,DIRECT",
-            "DOMAIN-KEYWORD,cnki,DIRECT",
-            "DOMAIN-KEYWORD,weixin,DIRECT",
-            "DOMAIN-KEYWORD,qcc,DIRECT",
-            "DOMAIN-KEYWORD,gitcode,DIRECT",
-            "DOMAIN-SUFFIX,linux.do,DIRECT",
-            "DOMAIN-SUFFIX,speedtest.net,DIRECT",
-            "DOMAIN-SUFFIX,nguaduot.cn,DIRECT"
+            "DOMAIN-KEYWORD,anthropic,💬 Ai平台",
+            "DOMAIN-KEYWORD,claude,💬 Ai平台",
+            
+            // 自定义直连
+            "DOMAIN-KEYWORD,infini,🎯 自定义直连",
+            "DOMAIN-KEYWORD,cnki,🎯 自定义直连",
+            "DOMAIN-KEYWORD,weixin,🎯 自定义直连",
+            "DOMAIN-KEYWORD,qcc,🎯 自定义直连",
+            "DOMAIN-KEYWORD,gitcode,🎯 自定义直连",
+            "DOMAIN-SUFFIX,linux.do,🎯 自定义直连",
+            "DOMAIN-SUFFIX,speedtest.net,🎯 自定义直连",
+            "DOMAIN-SUFFIX,nguaduot.cn,🎯 自定义直连"
         ];
 
-        // Garena 直连规则
-        const garenaRules = [
-            "DOMAIN-SUFFIX,garena.com,DIRECT",
-            "DOMAIN-SUFFIX,seagroup.com,DIRECT",
-            "DOMAIN-SUFFIX,sea.com,DIRECT",
-            "DOMAIN-SUFFIX,garena.cn,DIRECT",
-            "DOMAIN-SUFFIX,garenanow.com,DIRECT",
-            "DOMAIN-SUFFIX,web.garenanow.com,DIRECT",
-            "DOMAIN-SUFFIX,freefiremobile.com,DIRECT"
-        ];
-
-        // ==================== 规则顺序 ====================
+        // ==================== 规则顺序（与ACL4SSR配置保持一致）====================
         config["rules"] = [
-            // 1. Garena 直连规则（最高优先级）
-            ...garenaRules,
-
-            // 2. 进程规则
+            // 1. 进程规则
             ...ruleSetRules(["ProcessRules"], "DIRECT"),
-
-            // 3. 自定义规则
+            
+            // 2. 自定义规则
             ...customDirectRules,
-            ...ruleSetRules(["CustomDirect"], "DIRECT"),
-
-            // 4. 局域网直连
+            ...ruleSetRules(["CustomDirect"], "🎯 自定义直连"),
+            
+            // 3. 局域网直连
             ...ruleSetRules(["LocalAreaNetwork"], "🎯 全球直连"),
             ...ruleSetRules(["UnBan"], "🎯 全球直连"),
-
-            // 5. 广告拦截（尽早拦截）
+            
+            // 4. 广告拦截（尽早拦截）
             ...ruleSetRules(["BanAD"], "🛑 广告拦截"),
             ...ruleSetRules(["BanProgramAD"], "🍃 应用净化"),
             ...ruleSetRules(["BanEasyList"], "🆎 AdBlock"),
             ...ruleSetRules(["BanEasyListChina"], "🆎 AdBlock"),
             ...ruleSetRules(["BanEasyPrivacy"], "🛡️ 隐私防护"),
-
-            // 6. 谷歌FCM
+            
+            // 5. 谷歌FCM
             ...ruleSetRules(["GoogleFCM"], "📢 谷歌FCM"),
-
-            // 7. 国内服务直连
+            
+            // 6. 国内服务直连
             ...ruleSetRules(["GoogleCN"], "🎯 全球直连"),
             ...ruleSetRules(["SteamCN"], "🎯 全球直连"),
-
-            // 8. 微软服务
+            
+            // 7. 微软服务
             ...ruleSetRules(["Bing"], "Ⓜ️ 微软Bing"),
             ...ruleSetRules(["OneDrive"], "Ⓜ️ 微软云盘"),
             ...ruleSetRules(["Microsoft"], "Ⓜ️ 微软服务"),
-
-            // 9. 苹果服务
+            
+            // 8. 苹果服务
             ...ruleSetRules(["Apple"], "🍎 苹果服务"),
-
-            // 10. 即时通讯
+            
+            // 9. 即时通讯
             ...ruleSetRules(["Telegram"], "📲 电报消息"),
-
-            // 11. AI平台
+            
+            // 10. AI平台
             ...ruleSetRules(["AI"], "💬 Ai平台"),
             ...ruleSetRules(["OpenAi"], "💬 Ai平台"),
-
-            // 12. 网易音乐
+            
+            // 11. 网易音乐
             ...ruleSetRules(["NetEaseMusic"], "🎶 网易音乐"),
-
-            // 13. 游戏平台
+            
+            // 12. 游戏平台
             ...ruleSetRules(["Epic"], "🎮 游戏平台"),
             ...ruleSetRules(["Origin"], "🎮 游戏平台"),
             ...ruleSetRules(["Sony"], "🎮 游戏平台"),
             ...ruleSetRules(["Steam"], "🎮 游戏平台"),
             ...ruleSetRules(["Nintendo"], "🎮 游戏平台"),
-
-            // 14. 流媒体服务
+            
+            // 13. 流媒体服务
             ...ruleSetRules(["YouTube"], "📹 油管视频"),
             ...ruleSetRules(["Netflix"], "🎥 奈飞视频"),
             ...ruleSetRules(["Bahamut"], "📺 巴哈姆特"),
             ...ruleSetRules(["BilibiliHMT"], "📺 哔哩哔哩"),
             ...ruleSetRules(["Bilibili"], "📺 哔哩哔哩"),
-
-            // 15. 媒体服务
+            
+            // 14. 媒体服务
             ...ruleSetRules(["ChinaMedia"], "🌏 国内媒体"),
             ...ruleSetRules(["ProxyMedia"], "🌍 国外媒体"),
-
-            // 16. 代理列表
+            
+            // 15. 代理列表
             ...ruleSetRules(["ProxyGFWlist"], "🚀 节点选择"),
-
-            // 17. 国内域名（直连）
+            
+            // 16. 国内域名（直连）
+            ...ruleSetRules(["GuoNeiWangZhan"], "🎯 全球直连"),
             ...ruleSetRules(["ChinaDomain"], "🎯 全球直连"),
-            ...ruleSetRules(["ChinaExtra"], "🎯 全球直连"),
             ...ruleSetRules(["ChinaCompanyIp"], "🎯 全球直连"),
             ...ruleSetRules(["Download"], "🎯 全球直连"),
-
-            // 18. IP规则
+            
+            // 17. IP规则
+            "GEOIP,CN,🎯 全球直连",
             ...ruleSetRules(["ChinaIPs"], "🎯 全球直连"),
-
-            // 19. 兜底规则
+            
+            // 18. 兜底规则
             "MATCH,🐟 漏网之鱼"
         ];
 
+        // ==================== 添加全局健康检查配置 ====================
+        if (!config["health-check"]) {
+            config["health-check"] = {
+                enable: true,
+                url: CONFIG.TEST_URL,
+                interval: CONFIG.HEALTH_CHECK_INTERVAL,
+                timeout: 5000,
+                lazy: false
+            };
+        }
+
         console.log(`配置生成完成 - 节点总数: ${allProxies.length}, 地区组: ${regionGroups.length}`);
-
+        
         return config;
-
+        
     } catch (error) {
         console.error("配置生成错误:", error);
         return config;
