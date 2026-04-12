@@ -10,47 +10,71 @@ external-controller: 127.0.0.1:9090
 # DNS配置
 dns:
   enable: true
-  ipv6: true
-  prefer-h3: true 
+  ipv6: false                        # 与全局 ipv6 保持一致
+  prefer-h3: false                   # 避免 QUIC 被运营商屏蔽导致解析失败
   respect-rules: true
-  listen: 0.0.0.0:1053 
+  listen: 127.0.0.1:1053            # 仅本机监听，避免局域网滥用
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
   use-hosts: true
-  use-system-hosts: false 
+  use-system-hosts: false
+
+  # fake-ip 白名单，防止 NTP / STUN / 本地服务异常
+  fake-ip-filter:
+    - "*.lan"
+    - "*.local"
+    - "localhost.ptlogin2.qq.com"
+    - "+.stun.*.*"
+    - "+.stun.*.*.*"
+    - "time.*.com"
+    - "time.*.gov"
+    - "time.*.edu.cn"
+    - "time.*.apple.com"
+    - "ntp.*.com"
+    - "*.time.edu.cn"
+    - "*.ntp.org.cn"
+    - "+.pool.ntp.org"
+    - "time1.cloud.tencent.com"
+
   nameserver:
-    - https://dns.alidns.com/dns-query 
-    - https://doh.pub/dns-query 
-  proxy-server-nameserver:
-    - https://dns.alidns.com/dns-query 
-    - https://doh.pub/dns-query 
-  direct-nameserver:
+    - https://doh.pub/dns-query
     - https://dns.alidns.com/dns-query
+
+  proxy-server-nameserver:
+    - https://doh.pub/dns-query
+    - https://dns.alidns.com/dns-query
+
+  direct-nameserver:
+    - 223.5.5.5                      # 直连用明文 UDP，避免 DoH 证书问题
+    - 119.29.29.29
+
   nameserver-policy:
     "geosite:cn,private":
       - https://doh.pub/dns-query
       - https://dns.alidns.com/dns-query
-    "makima.online":
+    "+.makima.online":               # 加 +. 前缀以匹配所有子域名
       - 119.29.29.29
+
   fallback:
     - https://1.1.1.1/dns-query
     - https://doh.apad.pro/dns-query
+
   fallback-filter:
-    geoip: false
+    geoip: true                      # 开启 geoip 过滤，国内 IP 走 nameserver
+    geoip-code: CN
     ipcidr:
       - 240.0.0.0/4
       - 0.0.0.0/32
       - 61.160.148.90/32
-      - "3131:3131:3131:3131:3131:3131:3131:3131/128"
     domain:
       - "+.fmta.boo"
 
-# 代理集和规则集缓存时间
+# 缓存配置
 profile:
   store-selected: true
   store-fake-ip: true
 
-# tun模式配置
+# TUN 模式配置
 tun:
   enable: true
   stack: system
@@ -58,4 +82,3 @@ tun:
     - "any:53"
   auto-route: true
   auto-detect-interface: true
- 
