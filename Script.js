@@ -56,26 +56,14 @@ function getProxiesByRegex(proxies, regex, concatProxies = []) {
     ];
 }
 
-// 创建健康检查配置
-function createHealthCheck() {
-    return {
-        enable: true,
-        url: CONFIG.TEST_URL,
-        interval: CONFIG.HEALTH_CHECK_INTERVAL,
-        timeout: 5000,
-        lazy: false
-    };
-}
-
 // ==================== 分组模板与构造函数 ====================
+const PROXY_TEMPLATE_TOKENS = {
+    REGIONS: "__REGIONS__"
+};
+
 const PROXY_OPTION_TEMPLATES = {
-    nodeAuto: ["🚀 节点选择", "♻️ 自动选择"],
-    nodeAutoManual: ["🚀 节点选择", "♻️ 自动选择", "🚀 手动切换"],
-    nodeAutoManualDirect: ["🚀 节点选择", "♻️ 自动选择", "🚀 手动切换", "DIRECT"],
-    nodeAutoFailoverLoadBalance: ["🚀 节点选择", "♻️ 自动选择", "🔯 故障转移", "🔮 负载均衡"],
-    directNodeAutoManual: ["DIRECT", "🚀 节点选择", "♻️ 自动选择", "🚀 手动切换"],
-    directNodeAuto: ["DIRECT", "🚀 节点选择", "♻️ 自动选择"],
-    autoNodeManualDirect: ["♻️ 自动选择", "🚀 节点选择", "🚀 手动切换", "DIRECT"],
+    nodeAutoManualDirect: ["🚀 节点选择", "♻️ 自动选择", PROXY_TEMPLATE_TOKENS.REGIONS, "🚀 手动切换", "DIRECT"],
+    directNodeAuto: ["DIRECT", "🚀 节点选择", "♻️ 自动选择", PROXY_TEMPLATE_TOKENS.REGIONS],
     rejectDirect: ["REJECT", "DIRECT"]
 };
 
@@ -89,7 +77,7 @@ function createSelectGroup(name, proxies, extras = {}) {
 }
 
 function createUrlTestGroup(name, proxies, options = {}) {
-    const group = {
+    return {
         name,
         type: "url-test",
         proxies,
@@ -97,44 +85,26 @@ function createUrlTestGroup(name, proxies, options = {}) {
         interval: options.interval || CONFIG.DEFAULT_INTERVAL,
         tolerance: options.tolerance ?? 50
     };
-
-    if (options.healthCheck !== undefined) {
-        group.healthCheck = options.healthCheck;
-    }
-
-    return group;
 }
 
 function createFallbackGroup(name, proxies, options = {}) {
-    const group = {
+    return {
         name,
         type: "fallback",
         proxies,
         url: options.url || CONFIG.TEST_URL,
         interval: options.interval || CONFIG.DEFAULT_INTERVAL
     };
-
-    if (options.healthCheck !== undefined) {
-        group.healthCheck = options.healthCheck;
-    }
-
-    return group;
 }
 
 function createLoadBalanceGroup(name, proxies, options = {}) {
-    const group = {
+    return {
         name,
         type: "load-balance",
         proxies,
         url: options.url || CONFIG.TEST_URL,
         interval: options.interval || CONFIG.DEFAULT_INTERVAL
     };
-
-    if (options.healthCheck !== undefined) {
-        group.healthCheck = options.healthCheck;
-    }
-
-    return group;
 }
 
 function ruleSetRules(ruleSetNames, targetGroup) {
@@ -248,28 +218,30 @@ function main(config) {
         const allProxyNames = allProxies.filter(name => !shouldExclude(name));
 
         // ==================== 辅助函数 ====================
-        function getAvailableProxies(baseProxies, includeRegions = true) {
-            const result = [...baseProxies];
-            
-            if (includeRegions) {
-                if (hkProxies.length > 0) result.push("🇭🇰 香港节点");
-                if (twProxies.length > 0) result.push("🇨🇳 台湾节点");
-                if (jpProxies.length > 0) result.push("🇯🇵 日本节点");
-                if (usProxies.length > 0) result.push("🇺🇲 美国节点");
-                if (sgProxies.length > 0) result.push("🇸🇬 狮城节点");
-                if (krProxies.length > 0) result.push("🇰🇷 韩国节点");
-                if (ukProxies.length > 0) result.push("🇬🇧 英国节点")
-            }
-            
-            return [...new Set(result)];
+        function getAvailableRegionOptions() {
+            const result = [];
+
+            if (hkProxies.length > 0) result.push("🇭🇰 香港节点");
+            if (twProxies.length > 0) result.push("🇨🇳 台湾节点");
+            if (jpProxies.length > 0) result.push("🇯🇵 日本节点");
+            if (usProxies.length > 0) result.push("🇺🇲 美国节点");
+            if (sgProxies.length > 0) result.push("🇸🇬 狮城节点");
+            if (krProxies.length > 0) result.push("🇰🇷 韩国节点");
+            if (ukProxies.length > 0) result.push("🇬🇧 英国节点");
+
+            return result;
         }
 
         function fromTemplate(templateKey, options = {}) {
             const { includeRegions = true, prepend = [], append = [] } = options;
             const baseTemplate = PROXY_OPTION_TEMPLATES[templateKey] || [];
+            const regions = includeRegions ? getAvailableRegionOptions() : [];
+
             return [...new Set([
                 ...prepend,
-                ...getAvailableProxies(baseTemplate, includeRegions),
+                ...baseTemplate.flatMap(proxy => (
+                    proxy === PROXY_TEMPLATE_TOKENS.REGIONS ? regions : [proxy]
+                )),
                 ...append
             ])];
         }
@@ -293,18 +265,11 @@ function main(config) {
             createLoadBalanceGroup("🔮 负载均衡", allProxyNames),
 
             // 应用分组
-            createSelectGroup("📲 电报消息", fromTemplate("nodeAuto", {
-                append: ["🚀 手动切换", "DIRECT"]
-            })),
-            createSelectGroup("💬 Ai平台", fromTemplate("nodeAuto", {
-                append: ["🚀 手动切换", "DIRECT"]
-            })),
-            createSelectGroup("📹 油管视频", fromTemplate("nodeAuto", {
-                append: ["🚀 手动切换", "DIRECT"]
-            })),
-            createSelectGroup("🎥 奈飞视频", fromTemplate("nodeAuto", {
-                prepend: ["🎥 奈飞节点"],
-                append: ["🚀 手动切换", "DIRECT"]
+            createSelectGroup("📲 电报消息", fromTemplate("nodeAutoManualDirect")),
+            createSelectGroup("💬 Ai平台", fromTemplate("nodeAutoManualDirect")),
+            createSelectGroup("📹 油管视频", fromTemplate("nodeAutoManualDirect")),
+            createSelectGroup("🎥 奈飞视频", fromTemplate("nodeAutoManualDirect", {
+                prepend: ["🎥 奈飞节点"]
             })),
             createSelectGroup("📺 巴哈姆特", [
                 ...(twProxies.length > 0 ? ["🇨🇳 台湾节点"] : []),
@@ -317,10 +282,7 @@ function main(config) {
                 ...(twProxies.length > 0 ? ["🇨🇳 台湾节点"] : []),
                 ...(hkProxies.length > 0 ? ["🇭🇰 香港节点"] : [])
             ]),
-            createSelectGroup("🌍 国外媒体", fromTemplate("nodeAuto", {
-                prepend: ["🚀 节点选择"],
-                append: ["🚀 手动切换", "DIRECT"]
-            })),
+            createSelectGroup("🌍 国外媒体", fromTemplate("nodeAutoManualDirect")),
             createSelectGroup("🌏 国内媒体", [
                 "DIRECT",
                 ...(hkProxies.length > 0 ? ["🇭🇰 香港节点"] : []),
@@ -329,29 +291,17 @@ function main(config) {
                 ...(jpProxies.length > 0 ? ["🇯🇵 日本节点"] : []),
                 "🚀 手动切换"
             ]),
-            createSelectGroup("📢 谷歌FCM", fromTemplate("nodeAuto", {
-                append: ["🚀 手动切换", "DIRECT"]
-            })),
-            createSelectGroup("Ⓜ️ 微软Bing", fromTemplate("nodeAuto", {
-                append: ["🚀 手动切换", "DIRECT"]
-            })),
-            createSelectGroup("Ⓜ️ 微软云盘", fromTemplate("nodeAuto", {
-                append: ["🚀 手动切换", "DIRECT"]
-            })),
-            createSelectGroup("Ⓜ️ 微软服务", fromTemplate("nodeAuto", {
-                append: ["🚀 手动切换", "DIRECT"]
-            })),
-            createSelectGroup("🍎 苹果服务", fromTemplate("nodeAuto", {
-                append: ["🚀 手动切换", "DIRECT"]
-            })),
-            createSelectGroup("🎮 游戏平台", fromTemplate("nodeAuto", {
-                append: ["🚀 手动切换", "DIRECT"]
-            })),
+            createSelectGroup("📢 谷歌FCM", fromTemplate("nodeAutoManualDirect")),
+            createSelectGroup("Ⓜ️ 微软Bing", fromTemplate("nodeAutoManualDirect")),
+            createSelectGroup("Ⓜ️ 微软云盘", fromTemplate("nodeAutoManualDirect")),
+            createSelectGroup("Ⓜ️ 微软服务", fromTemplate("nodeAutoManualDirect")),
+            createSelectGroup("🍎 苹果服务", fromTemplate("nodeAutoManualDirect")),
+            createSelectGroup("🎮 游戏平台", fromTemplate("nodeAutoManualDirect")),
             createSelectGroup("🎶 网易音乐", [
-                "DIRECT",
-                "🚀 节点选择",
-                "♻️ 自动选择",
-                ...neteaseMusicProxies
+                ...fromTemplate("directNodeAuto", {
+                    includeRegions: false,
+                    append: neteaseMusicProxies
+                })
             ]),
             createSelectGroup("🎯 全球直连", fromTemplate("directNodeAuto", { includeRegions: false })),
             createSelectGroup("🎯 自定义直连", ["DIRECT"]),
@@ -360,9 +310,7 @@ function main(config) {
             createSelectGroup("🆎 AdBlock", fromTemplate("rejectDirect", { includeRegions: false })),
             createSelectGroup("🛡️ 隐私防护", fromTemplate("rejectDirect", { includeRegions: false })),
 
-            createSelectGroup("🐟 漏网之鱼", fromTemplate("nodeAuto", {
-                append: ["🚀 手动切换", "DIRECT"]
-            })),
+            createSelectGroup("🐟 漏网之鱼", fromTemplate("nodeAutoManualDirect")),
 
             // 奈飞节点选择分组
             createSelectGroup("🎥 奈飞节点", [
@@ -412,7 +360,16 @@ function main(config) {
             "DOMAIN-KEYWORD,gitcode,🎯 自定义直连",
             "DOMAIN-SUFFIX,linux.do,🎯 自定义直连",
             "DOMAIN-SUFFIX,speedtest.net,🎯 自定义直连",
-            "DOMAIN-SUFFIX,nguaduot.cn,🎯 自定义直连"
+            "DOMAIN-SUFFIX,nguaduot.cn,🎯 自定义直连",
+
+            // Garena 直连规则
+            "DOMAIN-SUFFIX,garena.com,DIRECT",
+            "DOMAIN-SUFFIX,seagroup.com,DIRECT",
+            "DOMAIN-SUFFIX,sea.com,DIRECT",
+            "DOMAIN-SUFFIX,garena.cn,DIRECT",
+            "DOMAIN-SUFFIX,garenanow.com,DIRECT",
+            "DOMAIN-SUFFIX,web.garenanow.com,DIRECT",
+            "DOMAIN-SUFFIX,freefiremobile.com,DIRECT",
         ];
 
         // ==================== 规则顺序（与ACL4SSR配置保持一致）====================
