@@ -1,6 +1,6 @@
 // ==================== 常量配置 ====================
 const CONFIG = {
-    TEST_URL: "https://cp.cloudflare.com/generate_204", // "http://www.gstatic.com/generate_204",
+    TEST_URL: "https://www.gstatic.com/generate_204",
     DEFAULT_INTERVAL: 300,
     HEALTH_CHECK_INTERVAL: 600,
     RULE_UPDATE_INTERVAL: 86400,
@@ -188,10 +188,10 @@ const RULE_PROVIDER_DEFINITIONS = [
     ["ChinaDomain", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/ChinaDomain.list", "./ruleset/ChinaDomain.yaml"],
     ["ChinaCompanyIp", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/ChinaCompanyIp.list", "./ruleset/ChinaCompanyIp.yaml"],
     ["Download", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Download.list", "./ruleset/Download.yaml"],
-    ["CustomDirect", "https://raw.githubusercontent.com/Lbiebest/clash-config/refs/heads/master/rules/CustomDirect.list", "./ruleset/CustomDirect.yaml"],
+    ["CustomDirect", "https://raw.githubusercontent.com/Lbiebest/clash-config/refs/heads/main/rules/CustomDirect.list", "./ruleset/CustomDirect.yaml"],
     ["GuoNeiWangZhan", "https://raw.githubusercontent.com/Meilieage/webcdn/main/rule/list/GuoNeiWangZhan.list", "./ruleset/GuoNeiWangZhan.yaml"],
     ["ChinaIPs", "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/ChinaIp.list", "./ruleset/ChinaIPs.yaml", { behavior: "ipcidr" }],
-    ["ProcessRules", "https://raw.githubusercontent.com/Lbiebest/clash-config/refs/heads/master/rules/ProcessRules.list", "./ruleset/ProcessRules.yaml", { format: "text" }]
+    ["ProcessRules", "https://raw.githubusercontent.com/Lbiebest/clash-config/refs/heads/main/rules/ProcessRules.list", "./ruleset/ProcessRules.yaml", { format: "text" }]
 ];
 
 const ruleProviders = Object.fromEntries(
@@ -258,6 +258,7 @@ function main(config) {
                 if (usProxies.length > 0) result.push("🇺🇲 美国节点");
                 if (sgProxies.length > 0) result.push("🇸🇬 狮城节点");
                 if (krProxies.length > 0) result.push("🇰🇷 韩国节点");
+                if (ukProxies.length > 0) result.push("🇬🇧 英国节点")
             }
             
             return [...new Set(result)];
@@ -293,32 +294,18 @@ function main(config) {
 
             // 应用分组
             createSelectGroup("📲 电报消息", fromTemplate("nodeAuto", {
-                prepend: ["🚀 节点选择"],
                 append: ["🚀 手动切换", "DIRECT"]
             })),
             createSelectGroup("💬 Ai平台", fromTemplate("nodeAuto", {
-                prepend: ["🚀 节点选择"],
                 append: ["🚀 手动切换", "DIRECT"]
             })),
             createSelectGroup("📹 油管视频", fromTemplate("nodeAuto", {
-                prepend: ["🚀 节点选择"],
                 append: ["🚀 手动切换", "DIRECT"]
             })),
-            createSelectGroup("🎥 奈飞视频", [
-                "🎥 奈飞节点",
-                "🚀 节点选择",
-                "♻️ 自动选择",
-                "🔯 故障转移",
-                "🔮 负载均衡",
-                ...(hkProxies.length > 0 ? ["🇭🇰 香港节点"] : []),
-                ...(twProxies.length > 0 ? ["🇨🇳 台湾节点"] : []),
-                ...(sgProxies.length > 0 ? ["🇸🇬 狮城节点"] : []),
-                ...(jpProxies.length > 0 ? ["🇯🇵 日本节点"] : []),
-                ...(usProxies.length > 0 ? ["🇺🇲 美国节点"] : []),
-                ...(krProxies.length > 0 ? ["🇰🇷 韩国节点"] : []),
-                "🚀 手动切换",
-                "DIRECT"
-            ]),
+            createSelectGroup("🎥 奈飞视频", fromTemplate("nodeAuto", {
+                prepend: ["🎥 奈飞节点"],
+                append: ["🚀 手动切换", "DIRECT"]
+            })),
             createSelectGroup("📺 巴哈姆特", [
                 ...(twProxies.length > 0 ? ["🇨🇳 台湾节点"] : []),
                 "🚀 节点选择",
@@ -342,97 +329,40 @@ function main(config) {
                 ...(jpProxies.length > 0 ? ["🇯🇵 日本节点"] : []),
                 "🚀 手动切换"
             ]),
-            createSelectGroup("📢 谷歌FCM", [
-                "DIRECT",
-                "🚀 节点选择",
-                ...(usProxies.length > 0 ? ["🇺🇲 美国节点"] : []),
-                ...(hkProxies.length > 0 ? ["🇭🇰 香港节点"] : []),
-                ...(twProxies.length > 0 ? ["🇨🇳 台湾节点"] : []),
-                ...(sgProxies.length > 0 ? ["🇸🇬 狮城节点"] : []),
-                ...(jpProxies.length > 0 ? ["🇯🇵 日本节点"] : []),
-                ...(krProxies.length > 0 ? ["🇰🇷 韩国节点"] : []),
-                "🚀 手动切换"
-            ]),
-            createSelectGroup("Ⓜ️ 微软Bing", [
-                "DIRECT",
-                "🚀 节点选择",
-                ...(usProxies.length > 0 ? ["🇺🇲 美国节点"] : []),
-                ...(hkProxies.length > 0 ? ["🇭🇰 香港节点"] : []),
-                ...(twProxies.length > 0 ? ["🇨🇳 台湾节点"] : []),
-                ...(sgProxies.length > 0 ? ["🇸🇬 狮城节点"] : []),
-                ...(jpProxies.length > 0 ? ["🇯🇵 日本节点"] : []),
-                ...(krProxies.length > 0 ? ["🇰🇷 韩国节点"] : []),
-                "🚀 手动切换"
-            ]),
-            createSelectGroup("Ⓜ️ 微软云盘", [
-                "DIRECT",
-                "🚀 节点选择",
-                ...(usProxies.length > 0 ? ["🇺🇲 美国节点"] : []),
-                ...(hkProxies.length > 0 ? ["🇭🇰 香港节点"] : []),
-                ...(twProxies.length > 0 ? ["🇨🇳 台湾节点"] : []),
-                ...(sgProxies.length > 0 ? ["🇸🇬 狮城节点"] : []),
-                ...(jpProxies.length > 0 ? ["🇯🇵 日本节点"] : []),
-                ...(krProxies.length > 0 ? ["🇰🇷 韩国节点"] : []),
-                "🚀 手动切换"
-            ]),
-            createSelectGroup("Ⓜ️ 微软服务", [
-                "DIRECT",
-                "🚀 节点选择",
-                ...(usProxies.length > 0 ? ["🇺🇲 美国节点"] : []),
-                ...(hkProxies.length > 0 ? ["🇭🇰 香港节点"] : []),
-                ...(twProxies.length > 0 ? ["🇨🇳 台湾节点"] : []),
-                ...(sgProxies.length > 0 ? ["🇸🇬 狮城节点"] : []),
-                ...(jpProxies.length > 0 ? ["🇯🇵 日本节点"] : []),
-                ...(krProxies.length > 0 ? ["🇰🇷 韩国节点"] : []),
-                "🚀 手动切换"
-            ]),
-            createSelectGroup("🍎 苹果服务", [
-                "DIRECT",
-                "🚀 节点选择",
-                ...(usProxies.length > 0 ? ["🇺🇲 美国节点"] : []),
-                ...(hkProxies.length > 0 ? ["🇭🇰 香港节点"] : []),
-                ...(twProxies.length > 0 ? ["🇨🇳 台湾节点"] : []),
-                ...(sgProxies.length > 0 ? ["🇸🇬 狮城节点"] : []),
-                ...(jpProxies.length > 0 ? ["🇯🇵 日本节点"] : []),
-                ...(krProxies.length > 0 ? ["🇰🇷 韩国节点"] : []),
-                "🚀 手动切换"
-            ]),
-            createSelectGroup("🎮 游戏平台", [
-                "DIRECT",
-                "🚀 节点选择",
-                ...(usProxies.length > 0 ? ["🇺🇲 美国节点"] : []),
-                ...(hkProxies.length > 0 ? ["🇭🇰 香港节点"] : []),
-                ...(twProxies.length > 0 ? ["🇨🇳 台湾节点"] : []),
-                ...(sgProxies.length > 0 ? ["🇸🇬 狮城节点"] : []),
-                ...(jpProxies.length > 0 ? ["🇯🇵 日本节点"] : []),
-                ...(krProxies.length > 0 ? ["🇰🇷 韩国节点"] : []),
-                "🚀 手动切换"
-            ]),
+            createSelectGroup("📢 谷歌FCM", fromTemplate("nodeAuto", {
+                append: ["🚀 手动切换", "DIRECT"]
+            })),
+            createSelectGroup("Ⓜ️ 微软Bing", fromTemplate("nodeAuto", {
+                append: ["🚀 手动切换", "DIRECT"]
+            })),
+            createSelectGroup("Ⓜ️ 微软云盘", fromTemplate("nodeAuto", {
+                append: ["🚀 手动切换", "DIRECT"]
+            })),
+            createSelectGroup("Ⓜ️ 微软服务", fromTemplate("nodeAuto", {
+                append: ["🚀 手动切换", "DIRECT"]
+            })),
+            createSelectGroup("🍎 苹果服务", fromTemplate("nodeAuto", {
+                append: ["🚀 手动切换", "DIRECT"]
+            })),
+            createSelectGroup("🎮 游戏平台", fromTemplate("nodeAuto", {
+                append: ["🚀 手动切换", "DIRECT"]
+            })),
             createSelectGroup("🎶 网易音乐", [
                 "DIRECT",
                 "🚀 节点选择",
                 "♻️ 自动选择",
                 ...neteaseMusicProxies
             ]),
-            createSelectGroup("🎯 全球直连", fromTemplate("directNodeAuto")),
+            createSelectGroup("🎯 全球直连", fromTemplate("directNodeAuto", { includeRegions: false })),
             createSelectGroup("🎯 自定义直连", ["DIRECT"]),
             createSelectGroup("🛑 广告拦截", fromTemplate("rejectDirect", { includeRegions: false })),
             createSelectGroup("🍃 应用净化", fromTemplate("rejectDirect", { includeRegions: false })),
             createSelectGroup("🆎 AdBlock", fromTemplate("rejectDirect", { includeRegions: false })),
             createSelectGroup("🛡️ 隐私防护", fromTemplate("rejectDirect", { includeRegions: false })),
 
-            createSelectGroup("🐟 漏网之鱼", [
-                "🚀 节点选择",
-                "♻️ 自动选择",
-                ...(hkProxies.length > 0 ? ["🇭🇰 香港节点"] : []),
-                ...(twProxies.length > 0 ? ["🇨🇳 台湾节点"] : []),
-                ...(sgProxies.length > 0 ? ["🇸🇬 狮城节点"] : []),
-                ...(jpProxies.length > 0 ? ["🇯🇵 日本节点"] : []),
-                ...(usProxies.length > 0 ? ["🇺🇲 美国节点"] : []),
-                ...(krProxies.length > 0 ? ["🇰🇷 韩国节点"] : []),
-                "🚀 手动切换",
-                "DIRECT",
-            ]),
+            createSelectGroup("🐟 漏网之鱼", fromTemplate("nodeAuto", {
+                append: ["🚀 手动切换", "DIRECT"]
+            })),
 
             // 奈飞节点选择分组
             createSelectGroup("🎥 奈飞节点", [
@@ -488,11 +418,11 @@ function main(config) {
         // ==================== 规则顺序（与ACL4SSR配置保持一致）====================
         config["rules"] = [
             // 1. 进程规则
-            // ...ruleSetRules(["ProcessRules"], "DIRECT"),
+            ...ruleSetRules(["ProcessRules"], "DIRECT"),
             
             // 2. 自定义规则
             ...customDirectRules,
-            // ...ruleSetRules(["CustomDirect"], "🎯 自定义直连"),
+            ...ruleSetRules(["CustomDirect"], "🎯 自定义直连"),
             
             // 3. 局域网直连
             ...ruleSetRules(["LocalAreaNetwork"], "🎯 全球直连"),
