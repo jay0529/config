@@ -2,24 +2,29 @@
 mixed-port: 7890
 allow-lan: true
 bind-address: "*"
-ipv6: false
+ipv6: false                             # 彻底禁用 IPv6，减少解析延迟和断流
 mode: rule
 log-level: info
 external-controller: 127.0.0.1:9090
 
-# DNS配置
+# 缓存配置
+profile:
+  store-selected: true
+  store-fake-ip: true
+
+# DNS 配置
 dns:
   enable: true
-  ipv6: false                        # 与全局 ipv6 保持一致
-  prefer-h3: false                   # 避免 QUIC 被运营商屏蔽导致解析失败
-  respect-rules: true
-  listen: 127.0.0.1:1053            # 仅本机监听，避免局域网滥用
+  ipv6: false
+  prefer-h3: false                      # 关闭 H3 以防运营商 UDP 阻断导致解析卡顿
+  listen: 0.0.0.0:1053
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
+  respect-rules: false                  # Fake-IP 模式下设为 false 以实现秒开
   use-hosts: true
   use-system-hosts: false
 
-  # fake-ip 白名单，防止 NTP / STUN / 本地服务异常
+  # Fake-IP 白名单：以下域名不返回虚假 IP，解决 NTP 时间同步、部分网游和国内特殊服务问题
   fake-ip-filter:
     - "*.lan"
     - "*.local"
@@ -36,48 +41,47 @@ dns:
     - "+.pool.ntp.org"
     - "time1.cloud.tencent.com"
 
+  # 默认 DNS：用于解析未匹配规则的域名
   nameserver:
     - https://doh.pub/dns-query
     - https://dns.alidns.com/dns-query
 
+  # 代理节点域名解析：确保能快速连上你的节点服务器
   proxy-server-nameserver:
     - https://doh.pub/dns-query
     - https://dns.alidns.com/dns-query
 
+  # 直连域名解析：仅使用国内明文 DNS，稳定高效
   direct-nameserver:
-    - 223.5.5.5                      # 直连用明文 UDP，避免 DoH 证书问题
+    - 223.5.5.5
     - 119.29.29.29
 
+  # 细分策略解析
   nameserver-policy:
     "geosite:cn,private":
       - https://doh.pub/dns-query
       - https://dns.alidns.com/dns-query
-    "+.makima.online":               # 加 +. 前缀以匹配所有子域名
+    "+.makima.online":
       - 119.29.29.29
 
+  # 备用 DNS：当 nameserver 失败时尝试
   fallback:
     - https://1.1.1.1/dns-query
-    - https://doh.apad.pro/dns-query
+    - https://dns.google/dns-query
 
   fallback-filter:
-    geoip: true                      # 开启 geoip 过滤，国内 IP 走 nameserver
+    geoip: true
     geoip-code: CN
     ipcidr:
       - 240.0.0.0/4
       - 0.0.0.0/32
-      - 61.160.148.90/32
     domain:
       - "+.fmta.boo"
-
-# 缓存配置
-profile:
-  store-selected: true
-  store-fake-ip: true
 
 # TUN 模式配置
 tun:
   enable: true
-  stack: system
+  stack: gvisor
   dns-hijack:
     - "any:53"
   auto-route: true
