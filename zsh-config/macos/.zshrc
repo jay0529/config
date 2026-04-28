@@ -50,7 +50,7 @@ export rime_frontend='rime/squirrel'
 # ------------------------------
 export ENABLE_TOOL_SEARCH=false
 export ANTHROPIC_BASE_URL=https://api.kimi.com/coding/
-export ANTHROPIC_API_KEY=sk-kimi-9f83iLrkBjzacgTVRdn9DSnFBXhyLqtFdVlpD9FJb4HQ2U6gEnSvGGLfJ4nf4iIY
+export ANTHROPIC_API_KEY=xxx
 
 # 复制并显示路径
 copy_current_path() {
