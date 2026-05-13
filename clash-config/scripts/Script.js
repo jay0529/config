@@ -349,15 +349,6 @@ function main(config) {
             "DOMAIN-SUFFIX,linux.do,🎯 自定义直连",
             "DOMAIN-SUFFIX,speedtest.net,🎯 自定义直连",
             "DOMAIN-SUFFIX,nguaduot.cn,🎯 自定义直连",
-
-            // Garena 直连规则
-            "DOMAIN-SUFFIX,garena.com,DIRECT",
-            "DOMAIN-SUFFIX,seagroup.com,DIRECT",
-            "DOMAIN-SUFFIX,sea.com,DIRECT",
-            "DOMAIN-SUFFIX,garena.cn,DIRECT",
-            "DOMAIN-SUFFIX,garenanow.com,DIRECT",
-            "DOMAIN-SUFFIX,web.garenanow.com,DIRECT",
-            "DOMAIN-SUFFIX,freefiremobile.com,DIRECT",
         ];
 
         // ==================== 规则顺序（与ACL4SSR配置保持一致）====================
